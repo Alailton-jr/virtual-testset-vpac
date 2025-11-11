@@ -1,0 +1,197 @@
+version: '3.8'
+
+# ============================================================================
+# Virtual TestSet - Macvlan Network Configuration
+# ============================================================================
+# This configuration uses macvlan networking for L2 network isolation.
+# Each container gets its own MAC address and appears as a distinct device.
+#
+# PREREQUISITES:
+# 1. Create macvlan network first:
+#    docker network create -d macvlan \
+#      --subnet=192.168.100.0/24 \
+#      --gateway=192.168.100.1 \
+#      --ip-range=192.168.100.128/25 \
+#      -o parent=eth0 \
+#      -o macvlan_mode=bridge \
+#      vts_macvlan
+#
+# 2. Adjust subnet/gateway/ip-range to match your network
+# 3. Change parent interface (eth0) to match your host
+#
+# LIMITATIONS:
+# - Host cannot directly communicate with containers (see README_DOCKER.md)
+# - Hardware timestamping may not work
+# - Some switches may filter ARP traffic (disable port security)
+#
+# USAGE:
+#   docker compose -f docker-compose-macvlan.yml up -d
+# ============================================================================
+
+services:
+  # =========================================================================
+  # Container 1: GOOSE Subscriber + SV Publisher
+  # =========================================================================
+  virtual-testset-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: vts-macvlan-1
+    hostname: vts-1
+    
+    networks:
+      vts_macvlan:
+        ipv4_address: 192.168.100.130
+    
+    # Runtime capabilities
+    cap_add:
+      - SYS_NICE      # RT scheduling
+      - NET_RAW       # AF_PACKET
+      - NET_ADMIN     # Interface config
+      - IPC_LOCK      # mlockall()
+    
+    # Resource limits
+    ulimits:
+      rtprio: 95      # RT priority limit
+      memlock: -1     # Unlimited locked memory
+    
+    # Environment configuration
+    environment:
+      # Network interface (inside container)
+      - IF_NAME=eth0
+      
+      # Real-time priority
+      - RT_PRIORITY=80
+      
+      # Optional: CPU affinity (0-indexed)
+      # - CPU_AFFINITY=2,3
+      
+      # Optional: Logging level
+      # - LOG_LEVEL=INFO
+    
+    # Volume mounts
+    volumes:
+      # Configuration (read-only)
+      - ./config:/app/config:ro
+      
+      # File storage (read-write)
+      - ./files:/app/files:rw
+      
+      # Logs (per-container directory)
+      - ./logs/vts1:/app/logs:rw
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Optional: Resource reservations
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2'
+    #       memory: 512M
+    #     reservations:
+    #       cpus: '2'
+    #       memory: 256M
+
+  # =========================================================================
+  # Container 2: GOOSE Publisher + SV Subscriber
+  # =========================================================================
+  virtual-testset-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: vts-macvlan-2
+    hostname: vts-2
+    
+    networks:
+      vts_macvlan:
+        ipv4_address: 192.168.100.131
+    
+    cap_add:
+      - SYS_NICE
+      - NET_RAW
+      - NET_ADMIN
+      - IPC_LOCK
+    
+    ulimits:
+      rtprio: 95
+      memlock: -1
+    
+    environment:
+      - IF_NAME=eth0
+      - RT_PRIORITY=80
+    
+    volumes:
+      - ./config:/app/config:ro
+      - ./files:/app/files:rw
+      - ./logs/vts2:/app/logs:rw
+    
+    restart: unless-stopped
+
+  # =========================================================================
+  # Container 3: Additional Instance (optional)
+  # =========================================================================
+  # virtual-testset-3:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   
+  #   container_name: vts-macvlan-3
+  #   hostname: vts-3
+  #   
+  #   networks:
+  #     vts_macvlan:
+  #       ipv4_address: 192.168.100.132
+  #   
+  #   cap_add:
+  #     - SYS_NICE
+  #     - NET_RAW
+  #     - NET_ADMIN
+  #     - IPC_LOCK
+  #   
+  #   ulimits:
+  #     rtprio: 95
+  #     memlock: -1
+  #   
+  #   environment:
+  #     - IF_NAME=eth0
+  #     - RT_PRIORITY=80
+  #   
+  #   volumes:
+  #     - ./config:/app/config:ro
+  #     - ./files:/app/files:rw
+  #     - ./logs/vts3:/app/logs:rw
+  #   
+  #   restart: unless-stopped
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  vts_macvlan:
+    external: true  # Must be created before starting containers
+
+# ============================================================================
+# Verification Commands
+# ============================================================================
+# Check MAC addresses:
+#   docker exec vts-macvlan-1 ip link show eth0
+#   docker exec vts-macvlan-2 ip link show eth0
+#
+# Check IP addresses:
+#   docker exec vts-macvlan-1 ip addr show eth0
+#   docker exec vts-macvlan-2 ip addr show eth0
+#
+# Test connectivity (from another host):
+#   ping 192.168.100.130
+#   ping 192.168.100.131
+#
+# Capture traffic:
+#   docker exec vts-macvlan-1 tcpdump -i eth0 -nn
+#
+# Check logs:
+#   docker logs vts-macvlan-1
+#   tail -f logs/vts1/app.log
+# ============================================================================

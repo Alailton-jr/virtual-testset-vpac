@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ramp-test.schema.json",
+  "title": "Ramping Test Configuration",
+  "description": "Configuration for variable ramping test",
+  "type": "object",
+  "required": ["streamId", "variable", "start", "end", "step", "stepDurationMs"],
+  "properties": {
+    "streamId": {
+      "type": "string",
+      "description": "Target stream ID"
+    },
+    "variable": {
+      "type": "string",
+      "description": "Variable to ramp (e.g., 'I-A.mag', 'V-B.angleDeg')",
+      "pattern": "^(V|I)-[A-N]\\.(mag|angleDeg)$"
+    },
+    "start": {
+      "type": "number",
+      "description": "Starting value"
+    },
+    "end": {
+      "type": "number",
+      "description": "Ending value"
+    },
+    "step": {
+      "type": "number",
+      "description": "Step size (positive or negative)",
+      "exclusiveMinimum": 0
+    },
+    "stepDurationMs": {
+      "type": "integer",
+      "description": "Duration of each step in milliseconds",
+      "minimum": 10,
+      "maximum": 10000,
+      "default": 50
+    },
+    "stopOnTrip": {
+      "type": "boolean",
+      "description": "Stop ramping when trip detected",
+      "default": true
+    },
+    "findDropoff": {
+      "type": "boolean",
+      "description": "Continue ramping down to find dropoff point",
+      "default": true
+    }
+  }
+}

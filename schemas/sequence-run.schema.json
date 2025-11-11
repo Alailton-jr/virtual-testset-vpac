@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "sequence-run.schema.json",
+  "title": "Sequence Test Configuration",
+  "description": "Multi-state test sequence configuration",
+  "type": "object",
+  "required": ["activeStreams", "states"],
+  "properties": {
+    "activeStreams": {
+      "type": "array",
+      "description": "List of stream IDs participating in the sequence",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "states": {
+      "type": "array",
+      "description": "Ordered list of test states",
+      "items": {
+        "type": "object",
+        "required": ["name", "durationSec", "transition", "phasors"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "State name (e.g., Pre-Fault, Fault, Post-Fault)",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "durationSec": {
+            "type": "number",
+            "description": "State duration in seconds (max duration, actual may be shorter on trip)",
+            "minimum": 0.01,
+            "maximum": 3600.0
+          },
+          "transition": {
+            "type": "object",
+            "description": "Transition condition to next state",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["time", "gooseTrip"],
+                "description": "Transition type: 'time' (automatic) or 'gooseTrip' (wait for GOOSE trip signal)"
+              }
+            }
+          },
+          "phasors": {
+            "type": "object",
+            "description": "Phasor configuration per stream for this state",
+            "patternProperties": {
+              "^[A-Za-z0-9_\\-]+$": {
+                "type": "object",
+                "required": ["freq", "channels"],
+                "properties": {
+                  "freq": {
+                    "type": "number",
+                    "minimum": 45.0,
+                    "maximum": 65.0
+                  },
+                  "channels": {
+                    "type": "object",
+                    "patternProperties": {
+                      "^(V|I)-[A-N]$": {
+                        "type": "object",
+                        "required": ["mag", "angleDeg"],
+                        "properties": {
+                          "mag": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "angleDeg": {
+                            "type": "number",
+                            "minimum": -180.0,
+                            "maximum": 360.0
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "minItems": 1
+    }
+  }
+}

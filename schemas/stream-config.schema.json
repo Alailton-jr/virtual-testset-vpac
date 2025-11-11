@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "stream-config.schema.json",
+  "title": "SV Stream Configuration",
+  "description": "Configuration for a Sampled Value (IEC 61850-9-2) stream",
+  "type": "object",
+  "required": ["name", "svID", "appIdHex", "macDst", "smpRate", "noChannels"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the stream",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "svID": {
+      "type": "string",
+      "description": "Unique SV identifier",
+      "pattern": "^[A-Za-z0-9_\\-]+$",
+      "minLength": 1,
+      "maxLength": 32
+    },
+    "appIdHex": {
+      "type": "string",
+      "description": "Application ID in hexadecimal (e.g., 0x4000)",
+      "pattern": "^0x[0-9A-Fa-f]{4}$"
+    },
+    "macDst": {
+      "type": "string",
+      "description": "Destination MAC address (multicast)",
+      "pattern": "^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$"
+    },
+    "vlanId": {
+      "type": "integer",
+      "description": "VLAN ID (optional)",
+      "minimum": 0,
+      "maximum": 4095
+    },
+    "vlanPriority": {
+      "type": "integer",
+      "description": "VLAN priority (0-7)",
+      "minimum": 0,
+      "maximum": 7,
+      "default": 4
+    },
+    "datSet": {
+      "type": "string",
+      "description": "Dataset reference",
+      "default": "MU1/LLN0$DS1"
+    },
+    "confRev": {
+      "type": "integer",
+      "description": "Configuration revision",
+      "minimum": 1,
+      "default": 1
+    },
+    "smpRate": {
+      "type": "integer",
+      "description": "Samples per second (e.g., 4800 = 80 samples/cycle @ 60Hz)",
+      "enum": [4000, 4800, 9600, 14400],
+      "default": 4800
+    },
+    "noChannels": {
+      "type": "integer",
+      "description": "Number of channels (typically 8 for 3V + 3I + neutral)",
+      "minimum": 4,
+      "maximum": 16,
+      "default": 8
+    }
+  }
+}

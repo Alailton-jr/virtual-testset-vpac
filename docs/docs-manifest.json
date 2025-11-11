@@ -1,0 +1,260 @@
+[
+  {
+    "original": "GETTING_STARTED.md",
+    "new": "00-overview/getting-started.md",
+    "action": "moved",
+    "reason": "Primary getting started guide for new users"
+  },
+  {
+    "original": "ROADMAP.md",
+    "new": "07-roadmap/roadmap.md",
+    "action": "moved",
+    "reason": "Project roadmap and future plans"
+  },
+  {
+    "original": "COMTRADE_PARSER.md",
+    "new": "03-backend/comtrade-parser.md",
+    "action": "moved",
+    "reason": "Backend-specific technical documentation"
+  },
+  {
+    "original": "DOCKER_MACOS_GUIDE.md",
+    "new": "02-setup/docker-macos-guide.md",
+    "action": "moved",
+    "reason": "Setup guide for Docker on macOS"
+  },
+  {
+    "original": "MACOS_NETWORK_SETUP.md",
+    "new": "02-setup/macos-network-setup.md",
+    "action": "moved",
+    "reason": "Network configuration guide for macOS"
+  },
+  {
+    "original": "README-MACOS-NETWORKING.md",
+    "new": "02-setup/macos-networking-alt.md",
+    "action": "moved",
+    "reason": "Alternative macOS networking guide (kept for reference, may merge later)"
+  },
+  {
+    "original": "MACOS_BPF_WEBSOCKET.md",
+    "new": "02-setup/macos-bpf-websocket.md",
+    "action": "moved",
+    "reason": "Technical notes on BPF and WebSocket on macOS"
+  },
+  {
+    "original": "BACKEND_MONITORING_SETUP.md",
+    "new": "03-backend/monitoring-setup.md",
+    "action": "moved",
+    "reason": "Backend monitoring configuration guide"
+  },
+  {
+    "original": "BACKEND_LOGS_PAGE_COMPLETE.md",
+    "new": "03-backend/logs-and-monitoring.md",
+    "action": "moved",
+    "reason": "Backend logs and monitoring implementation details"
+  },
+  {
+    "original": "BACKEND_INTEGRATION_STATUS.md",
+    "new": "03-backend/integration-status.md",
+    "action": "moved",
+    "reason": "Current status of backend integrations"
+  },
+  {
+    "original": "FRONTEND_BACKEND_INTEGRATION_COMPLETE.md",
+    "new": "04-frontend/backend-integration.md",
+    "action": "moved",
+    "reason": "Frontend-backend integration guide"
+  },
+  {
+    "original": "DASHBOARD_BACKEND_INTEGRATION.md",
+    "new": "04-frontend/dashboard-integration.md",
+    "action": "moved",
+    "reason": "Dashboard-specific integration details"
+  },
+  {
+    "original": null,
+    "new": "04-frontend/pages.md",
+    "action": "created",
+    "reason": "New comprehensive frontend pages guide with all routes, purposes, and image placeholders"
+  },
+  {
+    "original": "CROSS_PLATFORM.md",
+    "new": "05-cross-platform/overview.md",
+    "action": "moved",
+    "reason": "Comprehensive cross-platform guide (main reference)"
+  },
+  {
+    "original": "CROSS_PLATFORM_QUICK_REFERENCE.md",
+    "new": "05-cross-platform/quick-reference.md",
+    "action": "moved",
+    "reason": "Quick reference for cross-platform commands and configuration"
+  },
+  {
+    "original": "CROSS_PLATFORM_IMPLEMENTATION.md",
+    "new": "98-archive/CROSS_PLATFORM_IMPLEMENTATION.md",
+    "action": "archived",
+    "reason": "Detailed implementation log, archived as reference"
+  },
+  {
+    "original": "cross-plataform.md",
+    "new": "98-archive/cross-plataform.md",
+    "action": "archived",
+    "reason": "Duplicate/typo file, archived"
+  },
+  {
+    "original": "TESTS_QUICK_START.md",
+    "new": "06-tests/tests-quick-start.md",
+    "action": "moved",
+    "reason": "Quick start guide for running tests"
+  },
+  {
+    "original": "E2E_VERIFICATION.md",
+    "new": "06-tests/e2e-verification.md",
+    "action": "moved",
+    "reason": "End-to-end test verification guide"
+  },
+  {
+    "original": ["UNIT_TESTS_IMPLEMENTATION.md", "UNIT_TESTS_SUMMARY.md"],
+    "new": "06-tests/unit-tests.md",
+    "action": "merged",
+    "reason": "Consolidated unit test implementation and summary into single guide"
+  },
+  {
+    "original": "UNIT_TESTS_IMPLEMENTATION.md",
+    "new": "98-archive/UNIT_TESTS_IMPLEMENTATION.md",
+    "action": "archived",
+    "reason": "Original file archived after merging"
+  },
+  {
+    "original": "UNIT_TESTS_SUMMARY.md",
+    "new": "98-archive/UNIT_TESTS_SUMMARY.md",
+    "action": "archived",
+    "reason": "Original file archived after merging"
+  },
+  {
+    "original": null,
+    "new": "01-architecture/system-overview.md",
+    "action": "created",
+    "reason": "New high-level system architecture overview"
+  },
+  {
+    "original": null,
+    "new": "01-architecture/backend-architecture.md",
+    "action": "created",
+    "reason": "New detailed backend architecture documentation"
+  },
+  {
+    "original": null,
+    "new": "01-architecture/frontend-architecture.md",
+    "action": "created",
+    "reason": "New detailed frontend architecture documentation"
+  },
+  {
+    "original": "PHASE1_COMPLETION.md",
+    "new": "98-archive/PHASE1_COMPLETION.md",
+    "action": "archived",
+    "reason": "Historical completion log, not needed for end users"
+  },
+  {
+    "original": "FRONTEND_COMPLETION.md",
+    "new": "98-archive/FRONTEND_COMPLETION.md",
+    "action": "archived",
+    "reason": "Historical completion log, not needed for end users"
+  },
+  {
+    "original": "BACKEND_MONITORING_COMPLETE.md",
+    "new": "98-archive/BACKEND_MONITORING_COMPLETE.md",
+    "action": "archived",
+    "reason": "Historical completion log, not needed for end users"
+  },
+  {
+    "original": "IMPLEMENTATION_COMPLETE.md",
+    "new": "98-archive/IMPLEMENTATION_COMPLETE.md",
+    "action": "archived",
+    "reason": "Historical implementation log, not needed for end users"
+  },
+  {
+    "original": "IMPLEMENTATION_FINAL_SUMMARY.md",
+    "new": "98-archive/IMPLEMENTATION_FINAL_SUMMARY.md",
+    "action": "archived",
+    "reason": "Historical summary, not needed for end users"
+  },
+  {
+    "original": "IMPLEMENTATION_PROGRESS.md",
+    "new": "98-archive/IMPLEMENTATION_PROGRESS.md",
+    "action": "archived",
+    "reason": "Historical progress tracking, not needed for end users"
+  },
+  {
+    "original": "IMPLEMENTATION_SUMMARY.md",
+    "new": "98-archive/IMPLEMENTATION_SUMMARY.md",
+    "action": "archived",
+    "reason": "Historical summary, not needed for end users"
+  },
+  {
+    "original": "E2E_IMPLEMENTATION_SUMMARY.md",
+    "new": "98-archive/E2E_IMPLEMENTATION_SUMMARY.md",
+    "action": "archived",
+    "reason": "Historical E2E implementation log, not needed for end users"
+  },
+  {
+    "original": "INTEGRATION_VERIFICATION.md",
+    "new": "98-archive/INTEGRATION_VERIFICATION.md",
+    "action": "archived",
+    "reason": "Historical verification log, not needed for end users"
+  },
+  {
+    "original": "TASK_6_COMPLETION.md",
+    "new": "98-archive/TASK_6_COMPLETION.md",
+    "action": "archived",
+    "reason": "Task-specific completion log, historical reference only"
+  },
+  {
+    "original": "TASK_8_COMPLETION.md",
+    "new": "98-archive/TASK_8_COMPLETION.md",
+    "action": "archived",
+    "reason": "Task-specific completion log, historical reference only"
+  },
+  {
+    "original": "TASK_10_ANALYZER.md",
+    "new": "98-archive/TASK_10_ANALYZER.md",
+    "action": "archived",
+    "reason": "Task-specific analyzer notes, historical reference only"
+  },
+  {
+    "original": "TASK_13_DESIGN_SYSTEM.md",
+    "new": "98-archive/TASK_13_DESIGN_SYSTEM.md",
+    "action": "archived",
+    "reason": "Task-specific design notes, historical reference only"
+  },
+  {
+    "original": "TASK_15_STATE_ROUTING_API.md",
+    "new": "98-archive/TASK_15_STATE_ROUTING_API.md",
+    "action": "archived",
+    "reason": "Task-specific routing notes, historical reference only"
+  },
+  {
+    "original": "TASK_16_STREAM_MANAGEMENT.md",
+    "new": "98-archive/TASK_16_STREAM_MANAGEMENT.md",
+    "action": "archived",
+    "reason": "Task-specific stream notes, historical reference only"
+  },
+  {
+    "original": "TASK_17_MANUAL_INJECTION.md",
+    "new": "98-archive/TASK_17_MANUAL_INJECTION.md",
+    "action": "archived",
+    "reason": "Task-specific injection notes, historical reference only"
+  },
+  {
+    "original": "COMPLIANCE_REPORT.md",
+    "new": "98-archive/COMPLIANCE_REPORT.md",
+    "action": "archived",
+    "reason": "Compliance report, historical reference"
+  },
+  {
+    "original": null,
+    "new": "images/.gitkeep",
+    "action": "created",
+    "reason": "Placeholder for future screenshot images"
+  }
+]

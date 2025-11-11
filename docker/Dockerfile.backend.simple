@@ -1,0 +1,32 @@
+FROM ubuntu:24.04
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libpcap0.8 \
+    libfftw3-double3 \
+    netcat-openbsd \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy pre-built binary from local build
+COPY backend/build/Main /usr/local/bin/vts
+RUN chmod +x /usr/local/bin/vts
+
+# Create data directory for uploads
+RUN mkdir -p /app/data/uploads
+
+# Environment variables
+ENV IF_NAME=eth0 \
+    API_PORT=8080 \
+    WS_PORT=8090
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=2s --retries=5 \
+    CMD nc -z localhost ${API_PORT} || exit 1
+
+# Expose ports
+EXPOSE ${API_PORT} ${WS_PORT}
+
+CMD ["/usr/local/bin/vts", "--api-port", "8080", "--ws-port", "8090"]

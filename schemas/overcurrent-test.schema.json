@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "overcurrent-test.schema.json",
+  "title": "Overcurrent Relay Test Configuration",
+  "description": "Configuration for overcurrent (50/51) relay testing",
+  "type": "object",
+  "required": ["streamId", "pickup", "curve", "points"],
+  "properties": {
+    "streamId": {
+      "type": "string",
+      "description": "Target stream ID"
+    },
+    "pickup": {
+      "type": "number",
+      "description": "Pickup current in amperes (primary)",
+      "minimum": 0,
+      "exclusiveMinimum": true
+    },
+    "tms": {
+      "type": "number",
+      "description": "Time multiplier setting (for inverse curves)",
+      "minimum": 0.05,
+      "maximum": 10.0,
+      "default": 1.0
+    },
+    "curve": {
+      "type": "string",
+      "enum": [
+        "definite",
+        "IEC_SI",
+        "IEC_VI",
+        "IEC_EI",
+        "IEEE_MI",
+        "IEEE_VI",
+        "IEEE_EI",
+        "US_CO8",
+        "US_CO2"
+      ],
+      "description": "Time-current curve type",
+      "default": "IEC_SI"
+    },
+    "points": {
+      "type": "array",
+      "description": "Test multiples of pickup (e.g., [1.1, 1.5, 2, 3, 5, 10])",
+      "items": {
+        "type": "number",
+        "minimum": 0.1,
+        "maximum": 50.0
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "preFaultDurationSec": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 10.0,
+      "default": 1.0
+    },
+    "faultDurationSec": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 60.0,
+      "default": 10.0
+    }
+  }
+}

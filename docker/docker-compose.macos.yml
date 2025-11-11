@@ -1,0 +1,101 @@
+# Docker Compose configuration for running Virtual TestSet on macOS
+# This enables network packet transmission from Linux container on macOS host
+
+networks:
+  vts-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+volumes:
+  backend_data:
+    driver: local
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    
+    image: vts-backend:latest
+    container_name: vts-backend-macos
+    
+    # Use bridge network for macOS compatibility
+    networks:
+      vts-net:
+        ipv4_address: 172.25.0.10
+    
+    # Required capabilities for raw packet I/O
+    cap_add:
+      - NET_ADMIN       # Network interface configuration
+      - NET_RAW         # Raw socket creation (AF_PACKET)
+      - SYS_NICE        # Real-time thread priorities
+    
+    # Resource limits for real-time performance
+    ulimits:
+      rtprio: 95        # RT priority limit
+      memlock: -1       # Unlimited memory lock
+    
+    # Environment configuration
+    environment:
+      # Network configuration (container interface, not macOS interface)
+      - IF_NAME=eth0
+      
+      # API and WebSocket ports
+      - API_PORT=8081
+      - WS_PORT=8082
+      
+      # Platform is Linux (container OS)
+      - VTS_PLATFORM=LINUX
+      
+      # Optional: Real-time priority for critical threads
+      - RT_PRIORITY=80
+    
+    # Port mapping (host:container)
+    ports:
+      - "8080:8081"     # HTTP API
+      - "8090:8082"     # WebSocket
+    
+    # Volume mounts
+    volumes:
+      - backend_data:/app/data
+      - ../backend/files:/app/files
+    
+    # No healthcheck on macOS due to --no-net flag
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    
+    image: vts-frontend:latest
+    container_name: vts-frontend-macos
+    
+    depends_on:
+      - backend
+    
+    networks:
+      vts-net:
+        ipv4_address: 172.25.0.20
+    
+    ports:
+      - "5173:80"
+    
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 10s
+    
+    restart: unless-stopped
+
+
+# Note: This configuration works on macOS with Docker Desktop
+# The container is Linux-based, so it has full raw socket support
+# Network traffic is routed through Docker Desktop's VM
+#
+# For production deployments, use native Linux with docker-compose.yml
+# For macOS development with network support, use this file

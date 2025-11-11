@@ -1,0 +1,12 @@
+[submodule "backend/third_party/cpp-httplib"]
+	path = backend/third_party/cpp-httplib
+	url = https://github.com/yhirose/cpp-httplib.git
+[submodule "backend/third_party/websocketpp"]
+	path = backend/third_party/websocketpp
+	url = https://github.com/zaphoyd/websocketpp.git
+[submodule "backend/third_party/json"]
+	path = backend/third_party/json
+	url = https://github.com/nlohmann/json.git
+[submodule "backend/third_party/asio"]
+	path = backend/third_party/asio
+	url = https://github.com/chriskohlhoff/asio.git

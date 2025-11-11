@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "goose-config.schema.json",
+  "title": "GOOSE Subscriber Configuration",
+  "description": "Configuration for GOOSE subscription and trip rule",
+  "type": "object",
+  "required": ["goAppId", "goCBRef", "tripRule"],
+  "properties": {
+    "goAppId": {
+      "type": "string",
+      "description": "GOOSE Application ID in hexadecimal",
+      "pattern": "^0x[0-9A-Fa-f]{4}$"
+    },
+    "goCBRef": {
+      "type": "string",
+      "description": "GOOSE Control Block reference path",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "macSrc": {
+      "type": "string",
+      "description": "Source MAC address (optional, for filtering)",
+      "pattern": "^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$"
+    },
+    "tripRule": {
+      "type": "string",
+      "description": "Trip rule expression (e.g., 'RelayA_Trip/LLN0.Ind1.stVal == true')",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Enable/disable subscription",
+      "default": true
+    }
+  }
+}

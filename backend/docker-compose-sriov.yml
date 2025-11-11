@@ -1,0 +1,368 @@
+version: '3.8'
+
+# ============================================================================
+# Virtual TestSet - SR-IOV Virtual Function Configuration
+# ============================================================================
+# This configuration uses SR-IOV Virtual Functions (VF) for hardware-
+# accelerated network isolation. Each container gets a dedicated VF with
+# hardware-level isolation, bandwidth guarantees, and full feature support.
+#
+# PREREQUISITES:
+# 1. SR-IOV capable NIC (Intel I350/X540/X710, Mellanox ConnectX)
+# 2. IOMMU enabled in BIOS
+# 3. VFs created on host:
+#    echo 4 | sudo tee /sys/class/net/eth0/device/sriov_numvfs
+#
+# 4. VFs configured:
+#    sudo ip link set eth0 vf 0 mac 00:11:22:33:44:50 vlan 100 rate 1000
+#    sudo ip link set eth0 vf 1 mac 00:11:22:33:44:51 vlan 200 rate 1000
+#
+# 5. Pipework installed (for easy VF assignment):
+#    git clone https://github.com/jpetazzo/pipework
+#    sudo cp pipework/pipework /usr/local/bin/
+#
+# MANUAL VF ASSIGNMENT REQUIRED:
+# This compose file starts containers with --network none.
+# You must manually move VFs into container namespaces.
+#
+# For container 1:
+#   sudo pipework eth0 -i eth0 vts-sriov-1 192.168.100.130/24 @00:11:22:33:44:50
+#
+# For container 2:
+#   sudo pipework eth0 -i eth0 vts-sriov-2 192.168.100.131/24 @00:11:22:33:44:51
+#
+# BENEFITS:
+# - Hardware isolation (no network stack overhead)
+# - Dedicated bandwidth per container
+# - Hardware timestamping supported
+# - VLAN/QoS hardware offload
+# - Near-native performance
+#
+# USAGE:
+#   # Start containers (no network initially)
+#   docker compose -f docker-compose-sriov.yml up -d
+#   
+#   # Assign VFs (must be done after container start)
+#   sudo pipework eth0 -i eth0 vts-sriov-1 192.168.100.130/24 @00:11:22:33:44:50
+#   sudo pipework eth0 -i eth0 vts-sriov-2 192.168.100.131/24 @00:11:22:33:44:51
+#   
+#   # Verify
+#   docker exec vts-sriov-1 ip link show eth0
+#   docker exec vts-sriov-1 ethtool -i eth0  # Should show VF driver
+# ============================================================================
+
+services:
+  # =========================================================================
+  # Container 1: GOOSE Subscriber + SV Publisher (VF 0)
+  # =========================================================================
+  virtual-testset-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: vts-sriov-1
+    hostname: vts-sriov-1
+    
+    # No network initially - VF assigned manually after start
+    network_mode: none
+    
+    # Runtime capabilities
+    cap_add:
+      - SYS_NICE      # RT scheduling
+      - NET_RAW       # AF_PACKET
+      - NET_ADMIN     # Interface config
+      - IPC_LOCK      # mlockall()
+    
+    # Resource limits
+    ulimits:
+      rtprio: 95      # RT priority limit
+      memlock: -1     # Unlimited locked memory
+    
+    # Pin to specific CPUs (avoid CPU0/1 - reserve for system)
+    cpuset: "2-3"
+    
+    # Environment configuration
+    environment:
+      # Network interface (after VF assignment)
+      - IF_NAME=eth0
+      
+      # Real-time priority
+      - RT_PRIORITY=80
+      
+      # CPU affinity (match cpuset)
+      - CPU_AFFINITY=2,3
+      
+      # Optional: VLAN ID (if configured on VF)
+      # - VLAN_ID=100
+    
+    # Volume mounts
+    volumes:
+      # Configuration (read-only)
+      - ./config:/app/config:ro
+      
+      # File storage (read-write)
+      - ./files:/app/files:rw
+      
+      # Logs (per-container directory)
+      - ./logs/vts-sriov-1:/app/logs:rw
+    
+    # Optional: PTP device passthrough (if VF supports)
+    # devices:
+    #   - /dev/ptp0:/dev/ptp0
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Resource reservations (guaranteed allocation)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '2'           # Guaranteed CPU
+          memory: 256M
+
+  # =========================================================================
+  # Container 2: GOOSE Publisher + SV Subscriber (VF 1)
+  # =========================================================================
+  virtual-testset-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: vts-sriov-2
+    hostname: vts-sriov-2
+    
+    network_mode: none
+    
+    cap_add:
+      - SYS_NICE
+      - NET_RAW
+      - NET_ADMIN
+      - IPC_LOCK
+    
+    ulimits:
+      rtprio: 95
+      memlock: -1
+    
+    # Pin to different CPUs (isolate from container 1)
+    cpuset: "4-5"
+    
+    environment:
+      - IF_NAME=eth0
+      - RT_PRIORITY=80
+      - CPU_AFFINITY=4,5
+    
+    volumes:
+      - ./config:/app/config:ro
+      - ./files:/app/files:rw
+      - ./logs/vts-sriov-2:/app/logs:rw
+    
+    restart: unless-stopped
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '2'
+          memory: 256M
+
+  # =========================================================================
+  # Container 3: Additional Instance (VF 2, optional)
+  # =========================================================================
+  # virtual-testset-3:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   
+  #   container_name: vts-sriov-3
+  #   hostname: vts-sriov-3
+  #   
+  #   network_mode: none
+  #   
+  #   cap_add:
+  #     - SYS_NICE
+  #     - NET_RAW
+  #     - NET_ADMIN
+  #     - IPC_LOCK
+  #   
+  #   ulimits:
+  #     rtprio: 95
+  #     memlock: -1
+  #   
+  #   cpuset: "6-7"
+  #   
+  #   environment:
+  #     - IF_NAME=eth0
+  #     - RT_PRIORITY=80
+  #     - CPU_AFFINITY=6,7
+  #   
+  #   volumes:
+  #     - ./config:/app/config:ro
+  #     - ./files:/app/files:rw
+  #     - ./logs/vts-sriov-3:/app/logs:rw
+  #   
+  #   restart: unless-stopped
+  #   
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '2'
+  #         memory: 512M
+  #       reservations:
+  #         cpus: '2'
+  #         memory: 256M
+
+# ============================================================================
+# SR-IOV Setup Script (save as setup-sriov.sh)
+# ============================================================================
+# #!/bin/bash
+# set -e
+#
+# # Configuration
+# PF_IFACE="eth0"           # Physical function interface
+# NUM_VFS=4                 # Number of VFs to create
+#
+# # VF configurations (MAC, VLAN, rate limit in Mbps)
+# VF_CONFIGS=(
+#   "0:00:11:22:33:44:50:100:1000"
+#   "1:00:11:22:33:44:51:200:1000"
+#   "2:00:11:22:33:44:52:300:1000"
+#   "3:00:11:22:33:44:53:400:1000"
+# )
+#
+# echo "=== SR-IOV Virtual Function Setup ==="
+#
+# # Check if NIC supports SR-IOV
+# if ! lspci -v | grep -q "SR-IOV"; then
+#   echo "ERROR: No SR-IOV capable NIC found"
+#   exit 1
+# fi
+#
+# # Enable VFs
+# echo "Creating $NUM_VFS VFs on $PF_IFACE..."
+# echo $NUM_VFS > /sys/class/net/$PF_IFACE/device/sriov_numvfs
+#
+# # Wait for VFs to be created
+# sleep 2
+#
+# # Configure each VF
+# for config in "${VF_CONFIGS[@]}"; do
+#   IFS=':' read -r vf_id mac vlan rate <<< "$config"
+#   
+#   echo "Configuring VF $vf_id:"
+#   echo "  MAC:  $mac"
+#   echo "  VLAN: $vlan"
+#   echo "  Rate: $rate Mbps"
+#   
+#   ip link set $PF_IFACE vf $vf_id mac $mac vlan $vlan rate $rate
+#   ip link set $PF_IFACE vf $vf_id spoofchk off
+#   ip link set $PF_IFACE vf $vf_id trust on
+#   ip link set $PF_IFACE vf $vf_id state enable
+# done
+#
+# # Display configuration
+# echo ""
+# echo "=== VF Configuration ==="
+# ip link show $PF_IFACE | grep vf
+#
+# echo ""
+# echo "VFs ready. Start containers with:"
+# echo "  docker compose -f docker-compose-sriov.yml up -d"
+# echo ""
+# echo "Then assign VFs with pipework:"
+# echo "  sudo pipework $PF_IFACE -i eth0 vts-sriov-1 192.168.100.130/24 @00:11:22:33:44:50"
+# echo "  sudo pipework $PF_IFACE -i eth0 vts-sriov-2 192.168.100.131/24 @00:11:22:33:44:51"
+# ============================================================================
+
+# ============================================================================
+# Manual VF Assignment (Alternative to Pipework)
+# ============================================================================
+# If pipework is not available, use ip netns manually:
+#
+# # Get VF interface name
+# VF0_IFACE=$(ls /sys/class/net/eth0/device/virtfn0/net/)
+# VF1_IFACE=$(ls /sys/class/net/eth0/device/virtfn1/net/)
+#
+# # Get container PIDs
+# CPID1=$(docker inspect -f '{{.State.Pid}}' vts-sriov-1)
+# CPID2=$(docker inspect -f '{{.State.Pid}}' vts-sriov-2)
+#
+# # Create netns links
+# sudo ln -s /proc/$CPID1/ns/net /var/run/netns/$CPID1
+# sudo ln -s /proc/$CPID2/ns/net /var/run/netns/$CPID2
+#
+# # Move VF 0 to container 1
+# sudo ip link set $VF0_IFACE netns $CPID1 name eth0
+# sudo ip netns exec $CPID1 ip addr add 192.168.100.130/24 dev eth0
+# sudo ip netns exec $CPID1 ip link set eth0 up
+# sudo ip netns exec $CPID1 ip route add default via 192.168.100.1
+#
+# # Move VF 1 to container 2
+# sudo ip link set $VF1_IFACE netns $CPID2 name eth0
+# sudo ip netns exec $CPID2 ip addr add 192.168.100.131/24 dev eth0
+# sudo ip netns exec $CPID2 ip link set eth0 up
+# sudo ip netns exec $CPID2 ip route add default via 192.168.100.1
+# ============================================================================
+
+# ============================================================================
+# Verification Commands
+# ============================================================================
+# Check VF driver:
+#   docker exec vts-sriov-1 ethtool -i eth0
+#   # Should show: driver: ixgbevf (Intel) or i40evf or mlx5_core (Mellanox)
+#
+# Check link status:
+#   docker exec vts-sriov-1 ethtool eth0
+#   docker exec vts-sriov-1 ip link show eth0
+#
+# Check IP configuration:
+#   docker exec vts-sriov-1 ip addr show eth0
+#
+# Test connectivity:
+#   docker exec vts-sriov-1 ping -c 3 192.168.100.1
+#
+# Check hardware timestamps:
+#   docker exec vts-sriov-1 ethtool -T eth0
+#
+# Check PTP device:
+#   docker exec vts-sriov-1 ls -l /dev/ptp*
+#
+# Capture traffic:
+#   docker exec vts-sriov-1 tcpdump -i eth0 -nn
+#
+# Check logs:
+#   docker logs vts-sriov-1
+#   tail -f logs/vts-sriov-1/app.log
+#
+# Monitor RT scheduling:
+#   docker exec vts-sriov-1 ps -eLo pid,tid,class,rtprio,comm | grep vts
+# ============================================================================
+
+# ============================================================================
+# Troubleshooting
+# ============================================================================
+# VFs not created:
+#   - Check IOMMU enabled: dmesg | grep -i iommu
+#   - Check NIC supports SR-IOV: lspci -v | grep SR-IOV
+#   - Check kernel module loaded: lsmod | grep vfio
+#
+# VF assignment fails:
+#   - Check VF not already in use: ip link show
+#   - Check container running: docker ps
+#   - Try recreating VFs: echo 0 > sriov_numvfs; echo 4 > sriov_numvfs
+#
+# No connectivity:
+#   - Check VF MAC matches assignment
+#   - Check VLAN configuration on switch
+#   - Check spoof checking: ip link show eth0 | grep vf
+#   - Try disabling spoof check: ip link set eth0 vf 0 spoofchk off
+#
+# Hardware timestamps not working:
+#   - Check ethtool -T eth0 inside container
+#   - Some VF drivers don't support HW timestamps
+#   - Try PTP device passthrough with --device
+# ============================================================================

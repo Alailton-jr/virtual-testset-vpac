@@ -1,0 +1,65 @@
+# Windows Docker Build for Virtual TestSet
+# Escape=`
+
+# Use Windows Server Core as base for build stage
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS build
+
+# Install Chocolatey (Windows package manager)
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+RUN Set-ExecutionPolicy Bypass -Scope Process -Force; `
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+
+# Install build tools
+RUN choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+RUN choco install -y git
+RUN choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --quiet"
+
+# Install vcpkg for dependency management
+WORKDIR C:\\tools
+RUN git clone https://github.com/Microsoft/vcpkg.git
+WORKDIR C:\\tools\\vcpkg
+RUN .\\bootstrap-vcpkg.bat
+RUN .\\vcpkg integrate install
+
+# Install dependencies via vcpkg
+RUN .\\vcpkg install fftw3:x64-windows
+RUN .\\vcpkg install asio:x64-windows
+RUN .\\vcpkg install nlohmann-json:x64-windows
+
+# Copy source code
+WORKDIR C:\\app
+COPY backend\\ .\\backend\\
+
+# Build the project
+WORKDIR C:\\app\\backend
+RUN cmake -S . -B build `
+    -DCMAKE_BUILD_TYPE=Release `
+    -DCMAKE_TOOLCHAIN_FILE=C:\\tools\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake `
+    -G "Visual Studio 17 2022" -A x64
+
+RUN cmake --build build --config Release
+
+# Runtime stage - use Nano Server for smaller image
+FROM mcr.microsoft.com/windows/nanoserver:ltsc2022
+
+WORKDIR C:\\app
+
+# Copy binary from build stage
+COPY --from=build C:\\app\\backend\\build\\Release\\Main.exe C:\\app\\vts.exe
+
+# Create data directory for uploads
+RUN mkdir C:\\app\\data\\uploads
+
+# Environment variables
+ENV API_PORT=8080
+ENV WS_PORT=8090
+ENV NO_NET=true
+
+# Expose ports
+EXPOSE ${API_PORT} ${WS_PORT}
+
+# Note: Windows containers don't support health checks with nc like Linux
+# Use HTTP-based health check instead
+
+CMD ["C:\\app\\vts.exe", "--no-net"]

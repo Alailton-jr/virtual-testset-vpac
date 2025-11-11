@@ -1,0 +1,5 @@
+if(EXISTS "/Users/alailtonjr/Github/Virtual-TestSet/backend/tests/vts_tests[1]_tests.cmake")
+  include("/Users/alailtonjr/Github/Virtual-TestSet/backend/tests/vts_tests[1]_tests.cmake")
+else()
+  add_test(vts_tests_NOT_BUILT vts_tests_NOT_BUILT)
+endif()

@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "harmonics-update.schema.json",
+  "title": "Harmonics Update",
+  "description": "Add or update harmonics for a specific channel",
+  "type": "object",
+  "required": ["channel", "harmonics"],
+  "properties": {
+    "channel": {
+      "type": "string",
+      "description": "Target channel (e.g., V-A, I-B)",
+      "pattern": "^(V|I)-[A-N]$"
+    },
+    "harmonics": {
+      "type": "array",
+      "description": "Array of harmonic components",
+      "items": {
+        "type": "object",
+        "required": ["n", "mag", "angleDeg"],
+        "properties": {
+          "n": {
+            "type": "integer",
+            "description": "Harmonic order (2, 3, 5, 7, ...)",
+            "minimum": 2,
+            "maximum": 50
+          },
+          "mag": {
+            "type": "number",
+            "description": "Harmonic magnitude (RMS)",
+            "minimum": 0
+          },
+          "angleDeg": {
+            "type": "number",
+            "description": "Harmonic phase angle in degrees",
+            "minimum": -180.0,
+            "maximum": 360.0
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 20
+    }
+  }
+}

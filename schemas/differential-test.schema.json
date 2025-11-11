@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "differential-test.schema.json",
+  "title": "Differential Relay Test Configuration",
+  "description": "Configuration for differential (87) relay testing",
+  "type": "object",
+  "required": ["side1StreamId", "side2StreamId", "points", "settings"],
+  "properties": {
+    "side1StreamId": {
+      "type": "string",
+      "description": "Stream ID for primary side"
+    },
+    "side2StreamId": {
+      "type": "string",
+      "description": "Stream ID for secondary side"
+    },
+    "points": {
+      "type": "array",
+      "description": "Test points in Ir-Id plane",
+      "items": {
+        "type": "object",
+        "required": ["Ir", "Id"],
+        "properties": {
+          "Ir": {
+            "type": "number",
+            "description": "Restraint current (amperes)",
+            "minimum": 0
+          },
+          "Id": {
+            "type": "number",
+            "description": "Differential current (amperes)",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional point label"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "settings": {
+      "type": "object",
+      "description": "Relay settings for reference",
+      "properties": {
+        "slopeK1": {
+          "type": "number",
+          "description": "Slope 1 (typically 0.25-0.40)",
+          "minimum": 0,
+          "maximum": 1.0,
+          "default": 0.3
+        },
+        "slopeK2": {
+          "type": "number",
+          "description": "Slope 2 (typically 0.50-0.80)",
+          "minimum": 0,
+          "maximum": 1.5,
+          "default": 0.6
+        },
+        "minPickup": {
+          "type": "number",
+          "description": "Minimum pickup differential current (A)",
+          "minimum": 0,
+          "exclusiveMinimum": true,
+          "default": 0.3
+        },
+        "breakpoint": {
+          "type": "number",
+          "description": "Restraint current at slope transition (A)",
+          "minimum": 0,
+          "default": 2.0
+        }
+      }
+    },
+    "preFaultDurationSec": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 10.0,
+      "default": 1.0
+    },
+    "faultDurationSec": {
+      "type": "number",
+      "minimum": 0.01,
+      "maximum": 10.0,
+      "default": 2.0
+    }
+  }
+}

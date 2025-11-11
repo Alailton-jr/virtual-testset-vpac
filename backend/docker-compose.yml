@@ -1,0 +1,144 @@
+# Phase 9: Docker Compose for Real-Time Virtual Test Set
+# Configures container with proper RT capabilities, CPU isolation, and network access
+
+version: '3.8'
+
+services:
+  virtual-testset:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: virtual-testset:latest
+    container_name: virtual-testset-rt
+    
+    # Network mode: host for direct access to physical interfaces
+    # Alternative: Use macvlan for network isolation (see Phase 10)
+    network_mode: host
+    
+    # CPU isolation: Dedicate specific cores to this container
+    # Adjust based on your system (e.g., cores 2-3 for packet processing)
+    # Use 'lscpu' to see available cores
+    cpus: 2
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+        reservations:
+          cpus: '2'
+    # Note: Use --cpuset-cpus with docker run or deploy.placement.constraints for exact core pinning
+    
+    # Memory limits (optional - adjust based on workload)
+    # mem_limit: 2g
+    # memswap_limit: 2g
+    
+    # Real-time capabilities and limits
+    cap_add:
+      - SYS_NICE      # Required for SCHED_FIFO priority
+      - NET_RAW       # Required for AF_PACKET sockets
+      - NET_ADMIN     # Required for promisc mode, timestamping
+      - IPC_LOCK      # Required for mlockall()
+    
+    # Ulimits for real-time scheduling and memory locking
+    ulimits:
+      rtprio: 95        # Real-time priority limit (1-99)
+      memlock: -1       # Unlimited memory locking (required for mlockall)
+    
+    # Optional: PTP hardware clock device access
+    # Uncomment if using hardware timestamping with PTP
+    # devices:
+    #   - "/dev/ptp0:/dev/ptp0"
+    
+    # Environment variables
+    environment:
+      - IF_NAME=eth0                    # Network interface name (override via host env)
+      - RT_PRIORITY=80                  # Real-time priority for worker threads
+      - RT_CPU_AFFINITY=2,3            # CPU affinity (optional)
+      - TZ=UTC                          # Timezone for logs
+    
+    # Volume mounts for configuration and data
+    volumes:
+      # Configuration files
+      - ./config:/app/config:ro
+      # Data files (CSV, test data)
+      - ./files:/app/files:rw
+      # Logs output
+      - ./logs:/app/logs:rw
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Optional: Additional runtime constraints
+    # security_opt:
+    #   - no-new-privileges:true
+    
+    # Optional: PID limit to prevent fork bombs
+    # pids_limit: 100
+
+# ============================================================================
+# Additional services (example: multiple test set instances)
+# ============================================================================
+
+  # virtual-testset-2:
+  #   extends: virtual-testset
+  #   container_name: virtual-testset-rt-2
+  #   cpuset_cpus: "4,5"              # Different CPU cores
+  #   environment:
+  #     - IF_NAME=eth1                # Different interface
+  #     - RT_PRIORITY=80
+  #   volumes:
+  #     - ./config2:/app/config:ro
+  #     - ./files2:/app/files:rw
+  #     - ./logs2:/app/logs:rw
+
+# ============================================================================
+# Usage Instructions:
+# ============================================================================
+#
+# 1. Build the image:
+#    docker-compose build
+#
+# 2. Start the service:
+#    docker-compose up -d
+#
+# 3. View logs:
+#    docker-compose logs -f
+#
+# 4. Stop the service:
+#    docker-compose down
+#
+# 5. Enter container for debugging:
+#    docker-compose exec virtual-testset bash
+#
+# 6. Check real-time capabilities:
+#    docker-compose exec virtual-testset bash -c "ulimit -a | grep -E 'rtprio|memlock'"
+#
+# ============================================================================
+# Prerequisites:
+# ============================================================================
+#
+# 1. Linux host with RT kernel (PREEMPT_RT patch recommended)
+# 2. Docker version 20.10+ with compose plugin
+# 3. Host system tuned for real-time:
+#    - Run scripts/disable_gro_lro.sh
+#    - Run scripts/pin_irqs.sh
+#    - Verify with scripts/verify_rt_env.sh
+# 4. User in 'docker' group: sudo usermod -aG docker $USER
+# 5. Create directories: mkdir -p config files logs
+#
+# ============================================================================
+# Security Notes:
+# ============================================================================
+#
+# - Container runs as non-root user 'vts'
+# - Elevated capabilities (SYS_NICE, NET_RAW, etc.) granted only as needed
+# - network_mode: host required for direct interface access
+# - Consider using AppArmor/SELinux profiles for additional hardening
+#
+# ============================================================================

@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "distance-test.schema.json",
+  "title": "Distance Relay Test Configuration",
+  "description": "Configuration for distance (21) relay testing",
+  "type": "object",
+  "required": ["streamId", "source", "points"],
+  "properties": {
+    "streamId": {
+      "type": "string",
+      "description": "Target stream ID"
+    },
+    "source": {
+      "type": "object",
+      "description": "Source impedances for fault calculations",
+      "required": ["RS1", "XS1", "RS0", "XS0", "Vprefault"],
+      "properties": {
+        "RS1": {"type": "number", "minimum": 0},
+        "XS1": {"type": "number"},
+        "RS0": {"type": "number", "minimum": 0},
+        "XS0": {"type": "number"},
+        "Vprefault": {"type": "number", "minimum": 0}
+      }
+    },
+    "points": {
+      "type": "array",
+      "description": "Test points in R-X plane",
+      "items": {
+        "type": "object",
+        "required": ["R", "X", "faultType"],
+        "properties": {
+          "R": {
+            "type": "number",
+            "description": "Resistance (ohms secondary)"
+          },
+          "X": {
+            "type": "number",
+            "description": "Reactance (ohms secondary)"
+          },
+          "faultType": {
+            "type": "string",
+            "enum": ["AG", "BG", "CG", "AB", "BC", "CA", "ABG", "BCG", "CAG", "ABC"]
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional point label"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "preFaultDurationSec": {
+      "type": "number",
+      "description": "Duration of pre-fault state",
+      "minimum": 0.1,
+      "maximum": 10.0,
+      "default": 1.0
+    },
+    "faultDurationSec": {
+      "type": "number",
+      "description": "Maximum fault duration (test stops on trip)",
+      "minimum": 0.01,
+      "maximum": 10.0,
+      "default": 2.0
+    }
+  }
+}

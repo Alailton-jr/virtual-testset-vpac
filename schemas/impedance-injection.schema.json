@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "impedance-injection.schema.json",
+  "title": "Impedance Injection Configuration",
+  "description": "Fault impedance injection using symmetrical components",
+  "type": "object",
+  "required": ["streamId", "faultType", "R", "X", "source"],
+  "properties": {
+    "streamId": {
+      "type": "string",
+      "description": "Target stream ID"
+    },
+    "faultType": {
+      "type": "string",
+      "enum": ["AG", "BG", "CG", "AB", "BC", "CA", "ABG", "BCG", "CAG", "ABC"],
+      "description": "Fault type (phase-to-ground, phase-to-phase, or three-phase)"
+    },
+    "R": {
+      "type": "number",
+      "description": "Fault resistance in ohms",
+      "minimum": 0
+    },
+    "X": {
+      "type": "number",
+      "description": "Fault reactance in ohms"
+    },
+    "source": {
+      "type": "object",
+      "description": "Source impedances",
+      "required": ["RS1", "XS1", "RS0", "XS0", "Vprefault"],
+      "properties": {
+        "RS1": {
+          "type": "number",
+          "description": "Positive sequence source resistance (ohms)",
+          "minimum": 0
+        },
+        "XS1": {
+          "type": "number",
+          "description": "Positive sequence source reactance (ohms)"
+        },
+        "RS0": {
+          "type": "number",
+          "description": "Zero sequence source resistance (ohms)",
+          "minimum": 0
+        },
+        "XS0": {
+          "type": "number",
+          "description": "Zero sequence source reactance (ohms)"
+        },
+        "Vprefault": {
+          "type": "number",
+          "description": "Pre-fault line-to-neutral voltage (V RMS)",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

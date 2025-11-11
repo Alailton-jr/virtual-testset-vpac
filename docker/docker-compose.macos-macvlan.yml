@@ -1,0 +1,91 @@
+version: '3.8'
+
+# Docker Compose configuration for Virtual TestSet on macOS with macvlan
+# This gives the container direct access to your LAN (advanced setup)
+# 
+# PREREQUISITES:
+# 1. Create macvlan network first:
+#    docker network create -d macvlan \
+#      --subnet=192.168.1.0/24 \
+#      --gateway=192.168.1.1 \
+#      --ip-range=192.168.1.128/25 \
+#      -o parent=en0 \
+#      vts-macvlan
+#
+# 2. Replace 192.168.1.0/24 with your actual network subnet
+# 3. Replace en0 with your actual network interface (use 'ifconfig' to find it)
+# 4. Ensure IP address 192.168.1.200 is not in use on your network
+
+services:
+  vts:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    
+    image: vts:latest
+    container_name: vts-macos-macvlan
+    
+    # Use external macvlan network (must be created first)
+    networks:
+      vts-macvlan:
+        ipv4_address: 192.168.1.200  # Choose an unused IP on your LAN
+    
+    # Required capabilities
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - NET_BROADCAST
+      - SYS_NICE
+      - IPC_LOCK
+    
+    # Resource limits
+    ulimits:
+      rtprio: 95
+      memlock: -1
+    
+    # Environment
+    environment:
+      - IF_NAME=eth0           # Container interface
+      - API_PORT=8080
+      - WS_PORT=8090
+      - ALLOW_MULTICAST=true
+      - VTS_PLATFORM=LINUX
+    
+    # With macvlan, the container has its own IP on your LAN
+    # Access via: http://192.168.1.200:8080
+    # No port mapping needed (container is on LAN)
+    
+    # Volumes
+    volumes:
+      - ../backend/files:/app/files
+      - ../schemas:/app/schemas:ro
+    
+    restart: unless-stopped
+
+networks:
+  vts-macvlan:
+    external: true
+
+# USAGE:
+#
+# 1. Create macvlan network (one-time setup):
+#    ./scripts/create-macos-macvlan.sh
+#
+# 2. Start container:
+#    docker-compose -f docker-compose.macos-macvlan.yml up
+#
+# 3. Access from any device on your LAN:
+#    http://192.168.1.200:8080
+#
+# ADVANTAGES:
+# - Container appears as separate device on your network
+# - Direct access to multicast groups
+# - Can receive GOOSE/SV packets from other IEDs on LAN
+#
+# LIMITATIONS:
+# - More complex setup
+# - Requires unused IP on your network
+# - May not work with some WiFi networks (security restrictions)
+# - macOS host cannot communicate directly with container (macvlan limitation)
+#
+# For easier setup, use docker-compose.macos.yml instead
