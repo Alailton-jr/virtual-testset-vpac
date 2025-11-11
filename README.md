@@ -1,7 +1,3 @@
-Got it — I kept your text verbatim and only **reordered sections** (and added tiny in-section ToCs where helpful). **Overview** and **📚 Documentation** are now at the top, and **High-Level Overview** (inside Architecture) appears **before Repository Structure**.
-
----
-
 # Virtual Test Set (VTS)
 
 **Comprehensive IEC 61850 Relay Testing Platform**
